@@ -47,7 +47,7 @@ const getKlaviyoID = async (email) => {
         return responseObj
 
     } catch {
-        console.log('this failed email')
+        //console.log('this failed email')
 
     }
 }
