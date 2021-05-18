@@ -21,14 +21,9 @@ const httpRequest = (baseURL, email, klaviyoToken, pushToken, method) => {
         }
 
     }).then(function(response){
-        //console.log(response.data)
-        return {
-            status: response.status,
-            email: response.data[0].email,
-            klaviyoId: response.data[0].id
-
-        }
+        return response.data[0].id
     }).catch(function(error){
+        console.log('catch')
         return error
     })
 }
