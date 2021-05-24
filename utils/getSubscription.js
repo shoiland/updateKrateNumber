@@ -26,17 +26,17 @@ const httpRequest = (baseURL, method) => {
 
 
 
-const getSubscriptions = async (customerId) => {
+const getSubscription = async (subId) => {
 
     try {
 
-        var baseURL = `https://api.rechargeapps.com/subscriptions?customer_id=${customerId}`
+        var baseURL = `https://api.rechargeapps.com/subscriptions/${subId}`
 
         var response = await httpRequest(baseURL, 'get')
       
         var responseObj = {
             status: response.response.status, 
-            subscriptionsArray: response.response.data.subscriptions
+            subscription: response.response.data.subscription
 
         }
         return responseObj
@@ -47,4 +47,4 @@ const getSubscriptions = async (customerId) => {
     }
 }
 
-module.exports = getSubscriptions
+module.exports = getSubscription
