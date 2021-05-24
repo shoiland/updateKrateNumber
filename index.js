@@ -2,7 +2,7 @@ const express = require('express')
 const getKlaviyoID = require('./utils/getKlaviyoID')
 const updateKlaviyoProfile = require('./utils/updateKlaviyoProfile')
 const getReChargeCustomerObj = require('./utils/getReChargeCustomerObj')
-const getSubscriptions = require('./utils/getSubscriptions')
+const getSubscription = require('./utils/getSubscription')
 const updateRebillDate = require('./utils/updateRebillDate')
 const getOrderCount = require('./utils/getOrderCount')
 const sendErrorEmail = require('./utils/email')
@@ -25,28 +25,34 @@ async function runKlaviyoUpdate(property, propertyStatus, email) {
 }
 
 /****************************** UPDATE KLAVIYO PROFILE WITH NEXT CHARGE DATE *******************************/
-//Using this to update next charge date when someone changes their frequency
+//Will fire in the following cases: 
+    //Frequency Change 
+    //Cancelled Subscription (will set next charge date to null)
+    //Reactivate Subscription (will set next charge date to next rebill)
 app.post('/subscriptionUpdated', async (req, res) => {
     runKlaviyoUpdate("AA-next-charge-date", req.body.subscription.next_charge_scheduled_at, req.body.subscription.email)
     return res.status(200).end()
 })
 
 /****************************** UPDATE KLAVIYO PROFILE INDICATING ACTIVE STATUS *******************************/
-//Runs for new customers and those who reactivate their subscription if they didn't have one before
+//Will fire in the following cases: 
+    //Reactivated sub and now has active subscription
 app.post('/activation', async (req, res) => {
     runKlaviyoUpdate("AA-ReCharge_Status", req.body.customer.status, req.body.customer.email)
     return res.status(200).end()
 })
 
 /****************************** UPDATE KLAVIYO PROFILE INDICATING INACTIVE STATUS *******************************/
-//Runs when a customer has cancelled and they dont' have a subscription remaining meaning their account is set to inactive
+//Will fire in the following cases: 
+    //Cancelled subs where they don't have any active subs remaining 
 app.post('/deactivation', async (req, res) => {
     runKlaviyoUpdate("AA-ReCharge_Status", req.body.customer.status, req.body.customer.email)
     return res.status(200).end()
 })
 
 /****************************** UPDATE KLAVIYO PROFILE WITH MOST RECENT CANCEL REASON *******************************/
-//Runs when a customer has cancelled their subscription
+//Will fire in the following cases: 
+    //Cancelled Subscription
 app.post('/cancellation', async (req, res) => {
     runKlaviyoUpdate("AA-cancel_reason", req.body.subscription.cancellation_reason, req.body.subscription.email)
     runKlaviyoUpdate("AA-cancel_date", req.body.subscription.cancelled_at, req.body.subscription.email)
@@ -54,20 +60,27 @@ app.post('/cancellation', async (req, res) => {
 })
 
 /****************************** UPDATE KLAVIYO PROFILE WITH NEXT CHARGE FOR SKIPS *******************************/
-//Fires when someone skips a shipment and updates next charge date
+//Will fire in the following cases: 
+    //Skipped shipment
 app.post('/skipped', async (req, res) => {
     runKlaviyoUpdate("AA-next-charge-date", req.body.subscription.next_charge_scheduled_at, req.body.subscription.email)
     return res.status(200).end()
 })
 
 /****************************** FIRE FOR NEW SUBSCRIPTIONS AND SET NEXT CHARGE DATE *******************************/
-app.post('/subscriptionCreated', async (req, res) => {
-    runKlaviyoUpdate("AA-next-charge-date", req.body.subscription.next_charge_scheduled_at, req.body.subscription.email)
-    return res.status(200).end()
-})
+//Will fire in the following cases: 
+    //Subscription is created
+    //Shouldn't need to run because the Heroku app already has subscription created webhook 
+    //It will then change the next charge date which will trigger the subscription/updated which will add it to klaviyo
+// app.post('/subscriptionCreated', async (req, res) => {
+//     console.log('sub created: ', req.body.subscription.email)
+//     runKlaviyoUpdate("AA-next-charge-date", req.body.subscription.next_charge_scheduled_at, req.body.subscription.email)
+//     return res.status(200).end()
+// })
 
 /****************************** UPDATE KLAVIYO PROFILE WITH NEXT CHARGE DATE *******************************/
-//Fires if customer service updates the users next charge date
+//Will fire in the following cases: 
+    //CS updates next charge date
 app.post('/chargeUpdated', async (req, res) => {
     runKlaviyoUpdate("AA-next-charge-date", req.body.charge.scheduled_at, req.body.charge.email)
     return res.status(200).end()
@@ -75,42 +88,18 @@ app.post('/chargeUpdated', async (req, res) => {
 
 /****************************** UPDATE KLAVIYO PROFILE WITH KRATE NUMBER *******************************/
 //order/processed webhook https://developer.rechargepayments.com/#webhooks-explained
+//Will fire in the following cases: 
+    //Rebill goes thru and order is processed
 app.post('/updateKrateNumber', async (req, res) => {
 
-    var subscriptions = await getSubscriptions(req.body.order.customer_id)
-    var email = req.body.order.email 
-    var klaviyoId = await getKlaviyoID(email)
-    //Check and see if we received an error
-    if(klaviyoId.length > 0){
-        //Loop through the subscriptions for the length of number of subscriptions
-        for(var i = 0; i < subscriptions.subscriptionsArray.length; i++) {
-            var orderCount = await getOrderCount(rechargeCustomerId, subscriptions.subscriptionsArray[i].id)
-            //For each subscription update the Klaviyo Profile with Subscription Number and Order number on that subscription
-            updateKlaviyoProfile(klaviyoId, `AA-Subscription-${i + 1}-Krate Number`, orderCount.count + 1, email)
-            updateKlaviyoProfile(klaviyoId, `AA-Subscription-${i + 1}-Krate Status`, subscriptions.subscriptionsArray[i].status, email)
-            updateKlaviyoProfile(klaviyoId, `AA-Subscription-${i + 1}-Next Charge Date`, subscriptions.subscriptionsArray[i].next_charge_scheduled_at, email)
-        }
-    } else {
-        console.log('Can not find this person email in a list in klaviyo: ', email)
-    }
-    //Return 200 back to webhook letting them know we received it
+    var orderCount = await getOrderCount(req.body.order.customer_id, req.body.order.line_items[0].subscription_id)
+    var subscription = await getSubscription(req.body.order.line_items[0].subscription_id)
+
+    runKlaviyoUpdate("AA-Krate-Number", orderCount.count + 1, req.body.order.email)
+    runKlaviyoUpdate("AA-next-charge-date", subscription.subscription.next_charge_scheduled_at, req.body.order.email)
     return res.status(200).end()
-
-
-
-
-    runKlaviyoUpdate("AA-next-charge-date", req.body.charge.scheduled_at, req.body.charge.email)
-    return res.status(200).end()
-
-
-
-
 
 })
-
-
-
-
 
 
 /****************************** UPDATE KLAVIYO PROFILE WITH KRATE NUMBER *******************************/
