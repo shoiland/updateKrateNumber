@@ -1,18 +1,14 @@
 const express = require('express')
 const getKlaviyoID = require('./utils/getKlaviyoID')
 const updateKlaviyoProfile = require('./utils/updateKlaviyoProfile')
-const getReChargeCustomerObj = require('./utils/getReChargeCustomerObj')
 const getSubscription = require('./utils/getSubscription')
-const updateRebillDate = require('./utils/updateRebillDate')
 const getOrderCount = require('./utils/getOrderCount')
-const sendErrorEmail = require('./utils/email')
 
 const app = express()
 
 const port = process.env.PORT
 
 app.use(express.json())
-
 
 async function runKlaviyoUpdate(property, propertyStatus, email) {
     var klaviyoId = await getKlaviyoID(email)
