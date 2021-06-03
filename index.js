@@ -65,11 +65,11 @@ app.post('/skipped', async (req, res) => {
 
 /****************************** UPDATE KLAVIYO PROFILE WITH NEXT CHARGE FOR SKIPS *******************************/
 //Will fire in the following cases: 
-    //Skipped shipment
-    app.post('/unskipped', async (req, res) => {
-        runKlaviyoUpdate("AA-next-charge-date", req.body.subscription.next_charge_scheduled_at, req.body.subscription.email)
-        return res.status(200).end()
-    })
+//Skipped shipment
+app.post('/unskipped', async (req, res) => {
+    runKlaviyoUpdate("AA-next-charge-date", req.body.subscription.next_charge_scheduled_at, req.body.subscription.email)
+    return res.status(200).end()
+})
     
 
 
