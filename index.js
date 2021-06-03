@@ -89,10 +89,10 @@ app.post('/unskipped', async (req, res) => {
 /****************************** UPDATE KLAVIYO PROFILE WITH NEXT CHARGE DATE *******************************/
 //Will fire in the following cases: 
     //CS updates next charge date
-app.post('/chargeUpdated', async (req, res) => {
-    runKlaviyoUpdate("AA-next-charge-date", req.body.charge.scheduled_at, req.body.charge.email)
-    return res.status(200).end()
-})
+// app.post('/chargeUpdated', async (req, res) => {
+//     runKlaviyoUpdate("AA-next-charge-date", req.body.charge.scheduled_at, req.body.charge.email)
+//     return res.status(200).end()
+// })
 
 /****************************** UPDATE KLAVIYO PROFILE WITH KRATE NUMBER *******************************/
 //order/processed webhook https://developer.rechargepayments.com/#webhooks-explained
