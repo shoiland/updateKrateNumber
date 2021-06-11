@@ -39,6 +39,9 @@ app.post('/updateKrateNumber2', async (req, res) => {
 
         var responseKlaviyoCall1 = await runKlaviyoUpdate("AA-Krate-Number", count + 1, email)
         var responseKlaviyoCall2 = await runKlaviyoUpdate("AA-next-charge-date", nextCharge, email)
+
+        console.log(responseKlaviyoCall1)
+        console.log(responseKlaviyoCall2)
     
         return res.status(200).send()
 
