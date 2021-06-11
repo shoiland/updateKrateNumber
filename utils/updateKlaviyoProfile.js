@@ -1,7 +1,7 @@
 const axios = require('axios')
 
 
-const httpRequest = (baseURL, method, email, property) => {
+const httpRequest = (baseURL, method) => {
 
     return axios({
         method:method,
@@ -10,27 +10,6 @@ const httpRequest = (baseURL, method, email, property) => {
             "Accept": "*/*",         
         }
 
-    }).then(function(response){
-        
-        var newproperty = property
-
-        var responseObj = {
-            [newproperty]: response.data[property],
-            email: response.data.email
-        }
-        console.log('The Klaviyo profile was updated with the following: ',responseObj)
-
-        if(response.status !== 200)
-        {
-            console.log('The httpRequest to Klaviyo failed for this person: ', email)
-            return
-        }
-        return
-    }).catch(function(error){
-        console.log(error)
-        console.log('Received an error in the httpRequest in updating the Klaviyo profile for this email: ', email)
-
-        return
     })
 }
 
@@ -39,17 +18,27 @@ const httpRequest = (baseURL, method, email, property) => {
 
 const updateKlaviyoProfile = async (klaviyoId, property, status, email) => {
 
-    try {
+    return new Promise( async (resolve, reject) => {
 
-        const klaviyoToken = process.env.KLAVIYOTOKEN
-        var baseURL = `https://a.klaviyo.com/api/v1/person/${klaviyoId}?api_key=${klaviyoToken}&${property}=${status}`
+        try {
 
-        httpRequest(baseURL, 'put', email, property)
+            const klaviyoToken = process.env.KLAVIYOTOKEN
+            var baseURL = `https://a.klaviyo.com/api/v1/person/${klaviyoId}?api_key=${klaviyoToken}&${property}=${status}`
+    
+            var klaviyoDetails = await httpRequest(baseURL, 'put')
+            var newproperty = property
+            resolve(
+                {
+                [newproperty]: klaviyoDetails.data[property],
+                email: klaviyoDetails.data.email
+                }
+            )
+    
+        } catch (e) {
+            reject(e)
+        }
 
-    } catch {
-        console.log('Updating the Klaviyo Profile failed for this KlaviyoID: ', klaviyoId)
-
-    }
+    })
 }
 
 module.exports = updateKlaviyoProfile

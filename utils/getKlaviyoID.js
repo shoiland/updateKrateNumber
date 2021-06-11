@@ -10,21 +10,11 @@ const httpRequest = (baseURL, email, klaviyoToken, pushToken, method) => {
             "api_key": `${klaviyoToken}`, 
             "emails": email,
             "push_tokens": pushToken
-            
         },
         headers: {
             "Accept": "*/*",
             "Content-Type": "application/json",
-            
-            
-
         }
-
-    }).then(function(response){
-        return response.data[0].id
-    }).catch(function(error){
-        console.log('catch')
-        return error
     })
 }
 
@@ -32,19 +22,27 @@ const httpRequest = (baseURL, email, klaviyoToken, pushToken, method) => {
 
 const getKlaviyoID = async (email) => {
 
-    try {
+    return new Promise( async (resolve, reject) => {
 
-        var baseURL = 'https://a.klaviyo.com/api/v2/list/KXcuGm/subscribe'
-        const klaviyoToken = process.env.KLAVIYOTOKEN
-        const pushToken = process.env.PUSHTOKEN
+        try {
 
-        var responseObj = await httpRequest(baseURL, email, klaviyoToken, pushToken, 'get')
-        return responseObj
+            var baseURL = 'https://a.klaviyo.com/api/v2/list/KXcuGm/subscribe'
+            const klaviyoToken = process.env.KLAVIYOTOKEN
+            const pushToken = process.env.PUSHTOKEN
 
-    } catch {
-        //console.log('this failed email')
+            var responseObj = await httpRequest(baseURL, email, klaviyoToken, pushToken, 'get')
+        
+            if (responseObj.data.length === 0){
+                reject(`This user has no email in Klaviyo ${email}`)
+            }
+            resolve(responseObj.data[0].id)
 
-    }
+        } catch (e) {
+            reject(e)
+        }
+
+    })
+
 }
 
 module.exports = getKlaviyoID

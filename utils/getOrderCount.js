@@ -14,12 +14,6 @@ const httpRequest = (baseURL, method) => {
             "X-Recharge-Access-Token": process.env.RECHARGETOKEN
         }
 
-    }).then(function(response){
-        return {
-            response
-        }
-    }).catch(function(error){
-        return error
     })
 }
 
@@ -28,23 +22,25 @@ const httpRequest = (baseURL, method) => {
 
 const getOrderCount = async (customerId, subscriptionId) => {
 
-    try {
+    return new Promise( async (resolve, reject) => {
 
-        var baseURL = `https://api.rechargeapps.com/orders/count?customer_id=${customerId}&subscription_id=${subscriptionId}`
+        try {
 
-        var response = await httpRequest(baseURL, 'get')
-      
-        var responseObj = {
-            status: response.response.status, 
-            count: response.response.data.count
+            var baseURL = `https://api.rechargeapps.com/orders/count?customer_id=${customerId}&subscription_id=${subscriptionId}`
+    
+            var response = await httpRequest(baseURL, 'get')
+
+            resolve({
+                status: response.status, 
+                count: response.data.count
+            })
+    
+        } catch(e) {
+
+            reject(e)
 
         }
-        return responseObj
-
-    } catch {
-        console.log('this failed email')
-
-    }
+    })
 }
 
 module.exports = getOrderCount

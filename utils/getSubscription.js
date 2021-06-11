@@ -13,14 +13,8 @@ const httpRequest = (baseURL, method) => {
             "Accept": "*/*",
             "X-Recharge-Access-Token": process.env.RECHARGETOKEN
         }
-
-    }).then(function(response){
-        return {
-            response
-        }
-    }).catch(function(error){
-        return error
     })
+
 }
 
 
@@ -28,23 +22,26 @@ const httpRequest = (baseURL, method) => {
 
 const getSubscription = async (subId) => {
 
-    try {
+    return new Promise( async (resolve, reject) => {
+        try {
 
-        var baseURL = `https://api.rechargeapps.com/subscriptions/${subId}`
+            var baseURL = `https://api.rechargeapps.com/subscriptions/${subId}`
+    
+            var response = await httpRequest(baseURL, 'get')
 
-        var response = await httpRequest(baseURL, 'get')
-      
-        var responseObj = {
-            status: response.response.status, 
-            subscription: response.response.data.subscription
-
+            resolve({
+                status: response.status, 
+                subscription: response.data.subscription
+    
+            })
+    
+        } catch (e) {
+            reject(e)
         }
-        return responseObj
 
-    } catch {
-        console.log('this failed email')
+    })
 
-    }
+    
 }
 
 module.exports = getSubscription
